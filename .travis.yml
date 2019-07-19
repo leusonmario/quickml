@@ -1,17 +1,25 @@
+
+sudo: required
 language: java
 
-env:
-  global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "f8donA0A+CYYr01l7pPO+VjCa57g6uLdYOeZKxDs8DW4kWVzeJ9HVlbpK2rD6as3h+lvoKLAIBMIOF/90Bog3BBUJDO0QqGW85Ww1dMuwBxpudupgFbDB/kQz7fkanvmhhFSoUerwaIXFicbBGy2f6bqp9oPNJSihdMXFjcbCSo="
+jdk:
+  - oraclejdk8
 
-addons:
-  coverity_scan:
-    project:
-      name: "sanity/quickml"
-      description: "Build submitted via Travis CI"
-    notification_email: quickml@googlegroups.com
-    build_command_prepend: "mvn clean"
-    build_command:   "mvn -DskipTests=true compile"
-    branch_pattern: master
+script:
+  - mvn clean cobertura:cobertura -Dtest=TemporallyReweightedClassifierBuilderTest#simpleBmiTest -DfailIfNoTests=false
+
+before_deploy:
+- tar -zcvf coverage-result.tar.gz /home/travis/build/leusonmario/quickml/target/site/cobertura
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "Q9Csr7pi+qoeKh9Ns4TWNYSldxNAcWUfOb+IZRlQ2RU2wX8D/E7kHv5xJExA25tykI9Di48PIALdbTZXQmOMnpJAh6t25ojA9R8+b+sphzKLE6KIofKIc0uUksxMeQIA1Bq5FCNTYwhz4N7ihaajMiEzmi7CehbAbUn4arRowzuth2fAWXclGxr7KGKZi2DGnQuM/NCN6k8B0qfS0vr4ZnUYPEAQQ3H9Adl/o5ZIDa5MQdxaakRHQhULcWAk3l/H/TGDccsoPVrAHucEgyhhjfxsflOAkqFTSYnKwKIz+9VVdDs7xdiTtkoZ7KBc0mStDP7QSXolUymh94Xj3Cl6bS/EPn/5A9UI4f/epyiOvYjf8fcLamRjw1vJf6nwoNz7QNAecrkgF1A9acshV0LCaOQO/0up7ayhoaOqL/uQ2RiVQljzq8dgPaI8kQwYvvZEXMrgF8y6aFjSy6rZR7aJDlsaXaCsB6+gp13/wDKRhnXbO61lE1YwnTdoT8Rna6A8Uz+Qmnosce4x1qB5KdsopfxjanmOBpOc/pdAhABudBEemuFgq1DBgLjYijP1p2Ya22deqMPQLa/PmoGF/qQpMsMZAeaDcJV3b1W3eVhRMWdgoGVFlv9SMZkyggqZMlx42UOToQ7M+M+yPSggBMYn7qYWkrYOBfVvN3/CC7eL/gA="
+
+
+  file: coverage-result.tar.gz
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    tags: true
